@@ -52,24 +52,16 @@ class MainActivity : ComponentActivity() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MakeScreen() {
-    val state = rememberLazyGridState()
-    val atBottom = !state.canScrollForward
-
-    val maxCount = remember {mutableStateOf(30)}
-
-    val coroutineScope = rememberCoroutineScope()
-
-//    LaunchedEffect(key1 = state.firstVisibleItemIndex) {
-//        if(atBottom) {
-//            delay(5000)
-//            maxCount.value += 30
-//        }
-//    }
+    val state = rememberLazyGridState() //an object to store the state of the lazyVerticalGrid
+    val maxCount = remember {mutableStateOf(30)}    //the max number to display
+    val coroutineScope = rememberCoroutineScope()       //the scope for the button and number update coroutines
 
     Scaffold(modifier = Modifier.fillMaxSize(),
+        //A floating button to take the user to the top. Stays in place as user scrolls
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
+                    //on click, run a coroutine to shift back to the top and reset the numbers
                     coroutineScope.launch(Dispatchers.Main) {
                         state.animateScrollToItem(0)
                         maxCount.value = 30
@@ -85,18 +77,26 @@ fun MakeScreen() {
             }
         }
     ) {
+        //A grid with scrolling enabled, bound to the grid state defined earlier
         LazyVerticalGrid(
             state = state,
             columns = GridCells.Fixed(3),
             userScrollEnabled = true,
             contentPadding = PaddingValues(24.dp)
         ) {
+            //Whenever the user scrolls, this grid should recompose. This will cause
+            // atBottom to be reevaluated and the coroutine to run again.
+            val atBottom = !state.canScrollForward  //an object to indicate if the user is at the bottom of the scrollable section
+            //A coroutine to increase the max display number after a short delay.
+            //(The instructions said to add a delay. I don't know why.)
             coroutineScope.launch(Dispatchers.Main) {
                 if(atBottom){
                     delay(1000)
                     maxCount.value += 30
                 }
             }
+            //for each number from 1 to the current max, make a card showing that
+            //number in the grid
             items(maxCount.value) {num ->
                 Card(
                     modifier = Modifier
